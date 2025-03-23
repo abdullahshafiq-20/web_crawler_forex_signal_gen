@@ -150,7 +150,7 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar", filename=
     with sync_playwright() as p:
         # Launch browser with more options
         browser = p.chromium.launch(
-            headless=False,  # Try with headless=False to see what's happening
+            headless=True,  # Try with headless=False to see what's happening
             args=['--disable-blink-features=AutomationControlled']
         )
         
@@ -178,7 +178,7 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar", filename=
         
         # Try to find any table on the page first
         print("Looking for any table on the page...")
-        page.wait_for_selector("table", timeout=60000)
+        page.wait_for_selector(".calendar__table", timeout=60000).inner_html()
         
         # Take another screenshot to see if the page has changed
         page.screenshot(path="forex_factory_after_wait.png")
@@ -188,6 +188,8 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar", filename=
         print("Extracting content...")
         # Get HTML content of the whole page for examination
         html_content = page.content()
+        print("HTML content extracted")
+        # print(BeautifulSoup(html_content, "html.parser").prettify())  # Print the prettified HTML for better readability
         
         # Close the browser
         browser.close()
@@ -201,6 +203,7 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar", filename=
         
         # Look for a table that might contain calendar data
         tables = soup.find_all("table")
+        # print (tables)
         print(f"Found {len(tables)} tables on the page")
         
         calendar_table = None
@@ -247,13 +250,15 @@ def forex_factory_parser(content, filename="data.json"):
                     pass
         
         # Extract time
-        time_cell = row.find("td", class_="calendar__time")
+        time_cell = row.find("td", class_="calendar__cell calendar__date")
         event_time = None
         if time_cell:
             time_span = time_cell.find("span")
+            print(time_span)
             if time_span:
                 time_text = time_span.get_text(strip=True)
                 event_time = time_text
+
         
         # Extract currency
         currency_cell = row.find("td", class_="calendar__currency")

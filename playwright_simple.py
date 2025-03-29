@@ -189,76 +189,110 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar", filename=
         # Get HTML content of the whole page for examination
         html_content = page.content()
         print("HTML content extracted")
-        # print(BeautifulSoup(html_content, "html.parser").prettify())  # Print the prettified HTML for better readability
         
-        # Close the browser
-        browser.close()
-        
-        # Save the HTML for inspection
-        with open("forex_factory_page.html", "w", encoding="utf-8") as f:
-            f.write(html_content)
-        
-        # Parse the data using BeautifulSoup directly
-        soup = BeautifulSoup(html_content, "html.parser")
-        
-        # Look for a table that might contain calendar data
-        tables = soup.find_all("table")
-        # print (tables)
-        print(f"Found {len(tables)} tables on the page")
-        
+        # Find and extract the calendar table
         calendar_table = None
-        for i, table in enumerate(tables):
-            # Look for tables with rows that have typical economic calendar classes
-            if table.select("tr.calendar__row") or "calendar" in str(table.get("class", "")):
-                calendar_table = table
-                print(f"Found calendar table (table #{i+1})")
-                break
-        
-        if calendar_table:
-            return forex_factory_parser(str(calendar_table), filename)
-        else:
-            print("Could not find a suitable calendar table")
-            return json.dumps([], indent=4)
+        try:
+            b = page.locator(".calendar__table")
+            calendar_html = b.inner_html()
+            print("Calendar table HTML extracted")
+            
+            # Save the raw calendar HTML for debugging
+            with open("calendar_raw.html", "w", encoding="utf-8") as f:
+                f.write(calendar_html)
+                
+            # Parse the content directly
+            return forex_factory_parser(f"<table class='calendar__table'>{calendar_html}</table>", filename)
+            
+        except Exception as e:
+            print(f"Error extracting calendar table: {str(e)}")
+            
+            # Save the HTML for inspection
+            with open("forex_factory_page.html", "w", encoding="utf-8") as f:
+                f.write(html_content)
+            
+            # Parse the data using BeautifulSoup directly
+            soup = BeautifulSoup(html_content, "html.parser")
+            
+            # Look for a table that might contain calendar data
+            tables = soup.find_all("table")
+            print(f"Found {len(tables)} tables on the page")
+            
+            calendar_table = None
+            for i, table in enumerate(tables):
+                # Look for tables with rows that have typical economic calendar classes
+                if table.select("tr.calendar__row") or "calendar" in str(table.get("class", "")):
+                    calendar_table = table
+                    print(f"Found calendar table (table #{i+1})")
+                    break
+            
+            if calendar_table:
+                return forex_factory_parser(str(calendar_table), filename)
+            else:
+                print("Could not find a suitable calendar table")
+                return json.dumps([], indent=4)
 
 def forex_factory_parser(content, filename="data.json"):
-    soup = BeautifulSoup(f"<table class='calendar__table'>{content}</table>", "html.parser")
+    # Don't wrap the content in a table - it's already a table
+    soup = BeautifulSoup(content, "html.parser")
     events = []
     seen_events = set()
     current_date = None
     
-    # Select all calendar rows
-    rows = soup.select("tr.calendar__row")
+    # Debug the HTML structure
+    print(f"Parsing calendar content with {len(soup.select('tr'))} total rows")
+    
+    # Select all rows including day breakers
+    rows = soup.select("tr")
     
     for row in rows:
-        # Extract date from the date cell (if present)
+        # Check if this is a day breaker row first
+        if "calendar__row--day-breaker" in row.get("class", []):
+            # Extract date from day breaker row
+            date_span = row.find("span")
+            if date_span:
+                try:
+                    day_of_week = row.get_text(strip=True).split()[0]  # e.g., "Mon"
+                    date_text = date_span.get_text(strip=True)  # e.g., "Mar 31"
+                    year = datetime.datetime.now().year
+                    date_str = f"{day_of_week} {date_text} {year}"
+                    date_obj = datetime.datetime.strptime(date_str, "%a %b %d %Y")
+                    current_date = date_obj.strftime("%Y-%m-%d")
+                    print(f"Found day breaker with date: {current_date}")
+                except Exception as e:
+                    print(f"Error parsing day breaker date: {str(e)}")
+            continue
+        
+        # Skip rows that aren't calendar events
+        if not "calendar__row" in row.get("class", []):
+            continue
+        
+        # For regular calendar rows, look for the date cell
         date_cell = row.find("td", class_="calendar__date")
         if date_cell:
             date_span = date_cell.find("span", class_="date")
             if date_span:
-                # Format: "Mon Mar 17"
-                date_text = date_span.get_text(strip=True)
                 try:
-                    # Convert to proper date format
-                    date_parts = date_text.split()
-                    if len(date_parts) >= 3:
-                        month = date_parts[1]
-                        day = date_parts[2]
-                        year = datetime.datetime.now().year  # Assume current year
-                        date_obj = datetime.datetime.strptime(f"{day} {month} {year}", "%d %b %Y")
-                        current_date = date_obj.strftime("%Y-%m-%d")
-                except Exception:
-                    pass
+                    # The date format in date_span is like "Mon <span>Mar 30</span>"
+                    day_of_week = date_span.contents[0].strip()
+                    month_day = date_span.find("span").get_text(strip=True)
+                    year = datetime.datetime.now().year
+                    date_str = f"{day_of_week} {month_day} {year}"
+                    date_obj = datetime.datetime.strptime(date_str, "%a %b %d %Y")
+                    current_date = date_obj.strftime("%Y-%m-%d")
+                    print(f"Found date cell with date: {current_date}")
+                except Exception as e:
+                    print(f"Error parsing date cell: {str(e)}")
         
         # Extract time
-        time_cell = row.find("td", class_="calendar__cell calendar__date")
+        time_cell = row.find("td", class_="calendar__time")
         event_time = None
         if time_cell:
-            time_span = time_cell.find("span")
-            print(time_span)
-            if time_span:
-                time_text = time_span.get_text(strip=True)
+            # Time is directly in the cell, not in a span
+            time_text = time_cell.get_text(strip=True)
+            if time_text and time_text not in ["All Day", "Tentative"]:
                 event_time = time_text
-
+                print(f"Found time: {event_time}")
         
         # Extract currency
         currency_cell = row.find("td", class_="calendar__currency")
@@ -318,7 +352,7 @@ def forex_factory_parser(content, filename="data.json"):
                     previous_value = None
         
         # Only add events with meaningful data
-        if current_date and event_time and country and event_name:
+        if current_date and country and event_name:
             # Create a unique identifier
             event_key = f"{current_date}_{event_time}_{country}_{event_name}"
             
@@ -337,9 +371,12 @@ def forex_factory_parser(content, filename="data.json"):
                 "actual": actual_value,
                 "forecast": forecast_value,
                 "previous": previous_value,
-                "source": "ForexFactory"  # Add source for tracking
+                "source": "ForexFactory"
             }
             events.append(event_obj)
+            print(f"Added event: {country} - {event_name}")
+    
+    print(f"Extracted {len(events)} events from ForexFactory")
     
     # Load existing data if the file exists
     existing_events = []
@@ -349,7 +386,7 @@ def forex_factory_parser(content, filename="data.json"):
             # Add source field to existing events if they don't have it
             for event in existing_events:
                 if "source" not in event:
-                    event["source"] = "CashbackForex"  # Default source for existing events
+                    event["source"] = "CashbackForex"
     except (FileNotFoundError, json.JSONDecodeError):
         pass
     
@@ -362,9 +399,9 @@ def forex_factory_parser(content, filename="data.json"):
 
 # Example usage
 url = "https://www.cashbackforex.com/widgets/economic-calendar?ContainerId=economic-calendar-730150&DefaultTime=7_days&IsShowEmbedButton=false&DefaultTheme=plain"  # Change this to your target website
-# scraped_data = scrape_website(url)
-# soup = BeautifulSoup(scraped_data, 'html.parser')
-# parsed_data = parser(scraped_data)
+scraped_data = scrape_website(url)
+soup = BeautifulSoup(scraped_data, 'html.parser')
+parsed_data = parser(scraped_data)
 # Print the parsed data
 # print(parsed_data)  # Print the parsed JSON data
 # print(soup.prettify())  # Print the prettified HTML for better readability

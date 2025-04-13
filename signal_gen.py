@@ -2,21 +2,23 @@ import pandas as pd
 import json
 import datetime
 
-# 🔹 Load Scraped CPI Data from JSON File
-def load_cpi_data(file_path):
+# 🔹 Load Economic Data from JSON File
+def load_economic_data(file_path):
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
             
         df = pd.DataFrame(data)
         
-        # Filter for CPI events only
+        if df.empty:
+            print(f"Warning: No data found in {file_path}")
+            return pd.DataFrame()
+            
+        # Show summary of available events for debugging
         if 'event' in df.columns:
-            cpi_df = df[df['event'].str.contains('CPI', case=False, na=False)]
-            if cpi_df.empty:
-                print(f"Warning: No CPI events found in {file_path}")
-                # Show available events for debugging
-                print(f"Available events: {df['event'].unique()[:10]}")
+            event_counts = df['event'].value_counts()
+            print(f"Found {len(event_counts)} different event types")
+            print(f"Top events: {', '.join(event_counts.index[:5])}")
                 
         return df
     except Exception as e:
@@ -96,12 +98,9 @@ def truncate_data(df, days_before=2, include_today=True, include_tomorrow=True):
     return truncated_df
 
 # 🔹 Process and Generate Forex Signals
-def process_cpi_data(df):
-    # Filter only relevant CPI events
-    cpi_events = df[df['event'].str.contains('CPI', case=False, na=False)]
-    
-    if cpi_events.empty:
-        print("No CPI data found in the JSON file!")
+def process_economic_data(df):
+    if df.empty:
+        print("No economic data found in the JSON file!")
         return pd.DataFrame()
     
     # Clean and convert the previous values
@@ -129,38 +128,66 @@ def process_cpi_data(df):
             print(f"Warning: Could not convert '{value}' to numeric")
             return None
     
-    cpi_events['previous_numeric'] = cpi_events['previous'].apply(clean_numeric)
+    # Process all events with numeric previous values
+    df['previous_numeric'] = df['previous'].apply(clean_numeric)
     
     # Drop rows with missing previous values
-    cpi_events = cpi_events.dropna(subset=['previous_numeric'])
+    processed_df = df.dropna(subset=['previous_numeric'])
     
-    # Calculate change (if enough data points)
-    if len(cpi_events) > 1:
-        cpi_events = cpi_events.sort_values('date')
-        cpi_events['change'] = cpi_events['previous_numeric'].pct_change()
-    else:
-        # If only one data point, can't calculate change
-        cpi_events['change'] = 0
-
-    # Define interest rate (Can be dynamic)
-    interest_rate = 3.5  
-
-    # Generate Forex Signal
+    # Group by country and event to calculate changes within same event types
+    event_groups = processed_df.groupby(['country', 'event'])
+    
+    result_dfs = []
+    
+    for (country, event), group_df in event_groups:
+        if len(group_df) > 1:
+            temp_df = group_df.sort_values('date')
+            temp_df['change'] = temp_df['previous_numeric'].pct_change()
+        else:
+            # If only one data point, can't calculate change
+            temp_df = group_df.copy()
+            temp_df['change'] = None
+        
+        result_dfs.append(temp_df)
+    
+    if not result_dfs:
+        return pd.DataFrame()
+    
+    # Combine all processed groups back into one dataframe
+    processed_df = pd.concat(result_dfs)
+    
+    # Generate Forex Signal by analyzing event impact and change direction
     def forex_signal(row):
         if pd.isna(row["change"]):
             return "⚠️ INSUFFICIENT DATA"
-            
-        if row["change"] > 0 and interest_rate >= 3.5:
-            return "🔹 STRONG BUY EUR"
-        elif row["change"] < 0 and interest_rate < 2.0:
-            return "🔹 STRONG SELL EUR"
-        elif row["change"] > 0:
-            return "🔹 BUY EUR"
-        else:
-            return "🔹 SELL EUR"
 
-    cpi_events["signal"] = cpi_events.apply(forex_signal, axis=1)
-    return cpi_events
+        # Classify event type
+        event_lower = row["event"].lower()
+        country = row["country"]
+        change = row["change"]
+        
+        # Default impact direction (whether increase is positive)
+        increase_is_positive = True
+        
+        # Identify common economic indicators and their impact direction
+        if any(term in event_lower for term in ["inflation", "cpi", "ppi"]):
+            increase_is_positive = False  # Higher inflation generally negative
+        elif any(term in event_lower for term in ["unemployment", "jobless"]):
+            increase_is_positive = False  # Higher unemployment generally negative
+        elif any(term in event_lower for term in ["gdp", "growth", "production", "pmi", "manufacturing", "sales"]):
+            increase_is_positive = True   # Higher growth generally positive
+        elif "rate" in event_lower and any(term in event_lower for term in ["interest", "central", "bank"]):
+            # Interest rate impact depends on economic context - assuming higher rates = stronger currency
+            increase_is_positive = True
+
+        # Generate signal based on change direction and impact type
+        if (change > 0 and increase_is_positive) or (change < 0 and not increase_is_positive):
+            return f"🔹 BUY {country}"
+        else:
+            return f"🔹 SELL {country}"
+
+    processed_df["signal"] = processed_df.apply(forex_signal, axis=1)
+    return processed_df
 
 # 🔹 Display Signals in a Formatted Output
 def display_signals(df):
@@ -168,43 +195,51 @@ def display_signals(df):
         print("\n❌ No signals could be generated - check your data source")
         return
         
-    print("\n📊 Forex Trading Signals 📊\n")
+    print("\n📊 Economic Trading Signals 📊\n")
     
     # Get today's date for comparison
     today = pd.Timestamp.today().normalize()
     tomorrow = today + pd.Timedelta(days=1)
     yesterday = today - pd.Timedelta(days=1)
     
-    for _, row in df.iterrows():
-        # Format date with weekday and special labels (Today/Tomorrow/Yesterday)
-        date_obj = pd.to_datetime(row['date'])
-        weekday = date_obj.strftime('%A')  # Full weekday name
-        
-        # Add friendly label if it's a notable date
+    # Group by date for better readability
+    df['date'] = pd.to_datetime(df['date'])
+    date_groups = df.groupby(df['date'].dt.normalize())
+    
+    for date, group in sorted(date_groups):
+        # Format date with weekday and special labels
+        weekday = date.strftime('%A')
         date_label = ""
-        if date_obj.normalize() == today:
+        if date == today:
             date_label = " (Today)"
-        elif date_obj.normalize() == tomorrow:
+        elif date == tomorrow:
             date_label = " (Tomorrow)"
-        elif date_obj.normalize() == yesterday:
+        elif date == yesterday:
             date_label = " (Yesterday)"
             
-        formatted_date = f"{date_obj.strftime('%Y-%m-%d')} {weekday}{date_label}"
-        
-        print(f"📅 Date: {formatted_date} | 🕒 Time: {row['time'] if 'time' in row and not pd.isna(row['time']) else 'N/A'} | 🌍 Country: {row['country']}")
-        print(f"📈 Event: {row['event']}")
-        
-        # Format change as percentage if available
-        change_str = f"{row['change']:.2%}" if not pd.isna(row['change']) else "N/A"
-        print(f"📊 CPI Change: {change_str}")
-        
-        print(f"💹 Signal: {row['signal']}\n")
+        formatted_date = f"{date.strftime('%Y-%m-%d')} {weekday}{date_label}"
+        print(f"\n📅 {formatted_date}")
         print("=" * 50)
+        
+        # Sort events by time if available
+        if 'time' in group.columns:
+            group = group.sort_values('time')
+        
+        for _, row in group.iterrows():
+            print(f"🕒 Time: {row['time'] if 'time' in row and not pd.isna(row['time']) else 'N/A'} | 🌍 Country: {row['country']}")
+            print(f"📈 Event: {row['event']}")
+            
+            # Format change as percentage if available
+            change_str = f"{row['change']:.2%}" if not pd.isna(row['change']) else "N/A"
+            print(f"📊 Change: {change_str}")
+            
+            print(f"💹 Signal: {row['signal']}\n")
+            print("-" * 40)
 
 # 🔹 Main Function
 def main():
     file_path = "data.json"  # JSON file with scraped data
-    df = load_cpi_data(file_path)  # Load data
+    df = load_economic_data(file_path)  # Load data
     
     if df.empty:
         print("No data found! Please check your JSON file.")
@@ -217,7 +252,7 @@ def main():
         print("No data found in the specified date range!")
         return
     
-    df = process_cpi_data(df)  # Process and generate signals
+    df = process_economic_data(df)  # Process and generate signals
     display_signals(df)  # Show formatted output
 
 # 🔹 Run the Script

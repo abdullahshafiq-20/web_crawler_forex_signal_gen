@@ -67,12 +67,12 @@ def scrape_cashback_forex(url="https://www.cashbackforex.com/widgets/economic-ca
             EC.presence_of_element_located((By.CSS_SELECTOR, "#wrapper > div.ec-fx-calendar-body > div > div.ec-fx-calendar-table"))
         )
         content = driver.find_element(By.CSS_SELECTOR, "#wrapper > div.ec-fx-calendar-body > div > div.ec-fx-calendar-table").get_attribute("innerHTML")
-        driver.save_screenshot("screenshot.png")
+        # driver.save_screenshot("screenshot.png")
 
         content = parser_cashback_forex(content)
         return content
     except Exception as e:
-        driver.save_screenshot("error_screenshot.png")
+        # driver.save_screenshot("error_screenshot.png")
         return f"Error: {str(e)}"
     finally:
         if driver:  # Only quit if driver exists
@@ -203,7 +203,7 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
         time.sleep(random.uniform(3, 5))
         
         # Take screenshot right after navigation
-        driver.save_screenshot("forex_factory_initial.png")
+        # driver.save_screenshot("forex_factory_initial.png")
         print("Initial screenshot taken")
         
         # Wait a bit to let scripts execute

@@ -72,8 +72,8 @@ def scrape_cashback_forex(url="https://www.cashbackforex.com/widgets/economic-ca
         content = parser_cashback_forex(content)
         return content
     except Exception as e:
-        # driver.save_screenshot("error_screenshot.png")
-        return f"Error: {str(e)}"
+        print(f"Error in scrape_cashback_forex: {str(e)}")
+        return json.dumps([])
     finally:
         if driver:  # Only quit if driver exists
             try:

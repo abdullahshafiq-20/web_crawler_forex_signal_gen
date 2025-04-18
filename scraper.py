@@ -44,7 +44,7 @@ def get_driver():
 
 
 def scrape_cashback_forex(url="https://www.cashbackforex.com/widgets/economic-calendar?ContainerId=economic-calendar-730150&DefaultTime=7days&IsShowEmbedButton=false&DefaultTheme=plain"):
-    
+    driver = None
     try:
         driver = get_driver()
         driver.get(url)
@@ -182,6 +182,7 @@ def parser_cashback_forex(content, filename="data.json"):
     return json.dumps(events, indent=4)
 
 def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
+    driver = None
     try:
         print(f"Navigating to {url}...")
         driver = get_driver()

@@ -15,43 +15,35 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 
 def get_driver():
-    try:
-        options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        
-        # Add additional stealth options
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option("useAutomationExtension", False)
-        
-        # For Render, specify Chrome binary path if needed
-        # options.binary_location = '/path/to/chrome'
-        
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=options)
-        
-        # Apply stealth settings
-        stealth(driver,
-            languages=["en-US", "en"],
-            vendor="Google Inc.",
-            platform="Win32",
-            webgl_vendor="Intel Inc.",
-            renderer="Intel Iris OpenGL Engine",
-            fix_hairline=True,
-        )
-        
-        return driver
-    except Exception as e:
-        print(f"Error initializing WebDriver: {str(e)}")
-        return None
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    
+    # Add additional stealth options
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
+    
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    
+    # Apply stealth settings
+    stealth(driver,
+        languages=["en-US", "en"],
+        vendor="Google Inc.",
+        platform="Win32",
+        webgl_vendor="Intel Inc.",
+        renderer="Intel Iris OpenGL Engine",
+        fix_hairline=True,
+    )
+
+    return driver
 
 
 
 def scrape_cashback_forex(url="https://www.cashbackforex.com/widgets/economic-calendar?ContainerId=economic-calendar-730150&DefaultTime=7days&IsShowEmbedButton=false&DefaultTheme=plain"):
-    driver = None
     try:
         driver = get_driver()
         driver.get(url)
@@ -67,19 +59,15 @@ def scrape_cashback_forex(url="https://www.cashbackforex.com/widgets/economic-ca
             EC.presence_of_element_located((By.CSS_SELECTOR, "#wrapper > div.ec-fx-calendar-body > div > div.ec-fx-calendar-table"))
         )
         content = driver.find_element(By.CSS_SELECTOR, "#wrapper > div.ec-fx-calendar-body > div > div.ec-fx-calendar-table").get_attribute("innerHTML")
-        # driver.save_screenshot("screenshot.png")
+        driver.save_screenshot("screenshot.png")
 
         content = parser_cashback_forex(content)
         return content
     except Exception as e:
-        print(f"Error in scrape_cashback_forex: {str(e)}")
-        return json.dumps([])
+        driver.save_screenshot("error_screenshot.png")
+        return f"Error: {str(e)}"
     finally:
-        if driver:  # Only quit if driver exists
-            try:
-                driver.quit()
-            except:
-                pass
+        driver.quit()
 
 def parser_cashback_forex(content, filename="data.json"):
     soup = BeautifulSoup(content, "html.parser")
@@ -193,7 +181,7 @@ def parser_cashback_forex(content, filename="data.json"):
     return json.dumps(events, indent=4)
 
 def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
-    driver = None
+
     try:
         print(f"Navigating to {url}...")
         driver = get_driver()
@@ -203,7 +191,7 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
         time.sleep(random.uniform(3, 5))
         
         # Take screenshot right after navigation
-        # driver.save_screenshot("forex_factory_initial.png")
+        driver.save_screenshot("forex_factory_initial.png")
         print("Initial screenshot taken")
         
         # Wait a bit to let scripts execute
@@ -264,11 +252,7 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
         return json.dumps([], indent=4)
         
     finally:
-        if driver:  # Only quit if driver exists
-            try:
-                driver.quit()
-            except Exception as e:
-                print(f"Error quitting driver: {str(e)}")
+        driver.quit()
 
 def forex_factory_parser(content, filename="data_forex.json"):
     # Don't wrap the content in a table - it's already a table

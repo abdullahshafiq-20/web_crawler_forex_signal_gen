@@ -259,3 +259,15 @@ async def scrape_all():
 async def startup_event():
     import asyncio
     app.state.loop = asyncio.get_running_loop()
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    
+    # Get port from environment variable (Render sets this)
+    # or default to 8000 for local development
+    port = int(os.environ.get("PORT", 8000))
+    
+    # Bind to 0.0.0.0 to listen on all network interfaces
+    # This is essential for Render and other cloud platforms
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

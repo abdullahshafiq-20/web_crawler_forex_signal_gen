@@ -1,0 +1,16 @@
+requests
+python-dotenv
+google-genai
+pymongo
+pytz
+fastapi
+uvicorn
+bson
+typing-extensions
+python-multipart
+beautifulsoup4
+lxml
+aiohttp
+selenium
+webdriver-manager
+selenium-stealth

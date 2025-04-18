@@ -15,31 +15,38 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 
 def get_driver():
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    
-    # Add additional stealth options
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    
-    # Apply stealth settings
-    stealth(driver,
-        languages=["en-US", "en"],
-        vendor="Google Inc.",
-        platform="Win32",
-        webgl_vendor="Intel Inc.",
-        renderer="Intel Iris OpenGL Engine",
-        fix_hairline=True,
-    )
-
-    return driver
+    try:
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
+        # Add additional stealth options
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+        
+        # For Render, specify Chrome binary path if needed
+        # options.binary_location = '/path/to/chrome'
+        
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+        
+        # Apply stealth settings
+        stealth(driver,
+            languages=["en-US", "en"],
+            vendor="Google Inc.",
+            platform="Win32",
+            webgl_vendor="Intel Inc.",
+            renderer="Intel Iris OpenGL Engine",
+            fix_hairline=True,
+        )
+        
+        return driver
+    except Exception as e:
+        print(f"Error initializing WebDriver: {str(e)}")
+        return None
 
 
 
@@ -68,7 +75,11 @@ def scrape_cashback_forex(url="https://www.cashbackforex.com/widgets/economic-ca
         driver.save_screenshot("error_screenshot.png")
         return f"Error: {str(e)}"
     finally:
-        driver.quit()
+        if driver:  # Only quit if driver exists
+            try:
+                driver.quit()
+            except:
+                pass
 
 def parser_cashback_forex(content, filename="data.json"):
     soup = BeautifulSoup(content, "html.parser")
@@ -253,7 +264,11 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
         return json.dumps([], indent=4)
         
     finally:
-        driver.quit()
+        if driver:  # Only quit if driver exists
+            try:
+                driver.quit()
+            except Exception as e:
+                print(f"Error quitting driver: {str(e)}")
 
 def forex_factory_parser(content, filename="data_forex.json"):
     # Don't wrap the content in a table - it's already a table

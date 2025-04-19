@@ -120,9 +120,14 @@ export function WeeklySignalsPage() {
       setError(null);
       setSuccess(null);
       
+      console.log("Attempting to generate signals from:", `${api}/generate-signals`);
+      
       const response = await axios.get<GenerateResponse>(
         `${api}/generate-signals`,
       );
+      
+      console.log("Raw API response:", response);
+      console.log("Generated signals data:", response.data);
       
       if (response.data.status === "success") {
         // Convert the generated signals to the expected format
@@ -139,11 +144,17 @@ export function WeeklySignalsPage() {
         setSignalsData(newSignalData);
         setSuccess("Successfully generated new signals for the selected date.");
       } else {
+        console.error("API returned non-success status:", response.data);
         setError("Failed to generate signals. Please try again.");
       }
     } catch (err) {
       console.error("Error generating signals:", err);
-      setError("Error occurred while generating signals.");
+      if (axios.isAxiosError(err)) {
+        console.error("Axios error details:", err.response?.data);
+        setError(`Error occurred: ${err.message}. ${err.response?.data?.message || ''}`);
+      } else {
+        setError("Error occurred while generating signals.");
+      }
     } finally {
       setGenerating(false);
     }

@@ -1,13 +1,18 @@
-import path from "path"
-import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
+  },
+  // Add base config if you're deploying to a subdirectory
+  // If you're deploying to root, you can omit this
+  base: '/',
+  build: {
+    outDir: 'dist',
   },
 })

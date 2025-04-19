@@ -108,11 +108,13 @@ export function ScrapedDataPage() {
       const url = `${api}/events${params.toString() ? `?${params}` : ''}`
       const response = await axios.get<EventsResponse>(url)
       
-      if (response.data.status === "success" && Array.isArray(response.data.data)) {
+      if (response.data && response.data.status === "success" && Array.isArray(response.data.data)) {
         setEvents(response.data.data)
         setSuccess(`Successfully loaded ${response.data.data.length} events from database`)
       } else {
+        setEvents([]) // Set to empty array if data is invalid
         setError("Invalid response format from server")
+        console.error("Invalid response format:", response.data)
       }
     } catch (err) {
       console.error("Error fetching events from database:", err)
@@ -129,13 +131,22 @@ export function ScrapedDataPage() {
       setSuccess(null)
       
       const response = await axios.get<ScrapeResponse>(`${api}/scrape/cashbackforex`)
-      setEvents(response.data.data)
       
-      const message = `Successfully retrieved ${response.data.data.length} events (${response.data.db_result.created} new, ${response.data.db_result.updated} updated)`
-      setSuccess(message)
+      // Check if response.data.data exists and is an array before setting events
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        setEvents(response.data.data)
+        
+        const message = `Successfully retrieved ${response.data.data.length} events (${response.data.db_result.created} new, ${response.data.db_result.updated} updated)`
+        setSuccess(message)
+      } else {
+        setEvents([]) // Set to empty array if data is not available
+        setError("Invalid response format received from server")
+        console.error("Invalid response format:", response.data)
+      }
     } catch (err) {
       console.error("Error fetching scraped data:", err)
       setError("Failed to fetch scraped data. Please try again.")
+      setEvents([]) // Set to empty array on error
     } finally {
       setLoading(false)
     }

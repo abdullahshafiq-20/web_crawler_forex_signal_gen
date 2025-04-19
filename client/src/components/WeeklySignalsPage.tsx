@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SignalCard } from "@/components/signal-card"
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar } from "@/components/ui/luxon-calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { DateTime } from "luxon"
@@ -221,7 +221,6 @@ export function WeeklySignalsPage() {
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
-                mode="single"
                 selected={selectedDate ? new Date(selectedDate) : undefined}
                 onSelect={handleDateChange}
               />

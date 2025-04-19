@@ -7,7 +7,7 @@ import { RefreshCw, Calendar, Clock, Globe, Flag, TrendingUp } from "lucide-reac
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { DateTime } from "luxon"
-import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import { Calendar as CalendarComponent } from "@/components/ui/luxon-calendar"
 
 interface ScrapedEvent {
   date: string
@@ -306,7 +306,6 @@ export function ScrapedDataPage() {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <CalendarComponent
-                  mode="single"
                   selected={startDate}
                   onSelect={handleStartDateChange}
                   initialFocus
@@ -331,7 +330,6 @@ export function ScrapedDataPage() {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
                 <CalendarComponent
-                  mode="single"
                   selected={endDate}
                   onSelect={handleEndDateChange}
                   initialFocus

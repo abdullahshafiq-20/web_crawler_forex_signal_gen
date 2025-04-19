@@ -4,7 +4,9 @@ from scraper import forex_factory_scraper
 from utils.getToday import get_today_data
 from utils.getSourceData import extract_source_data
 from signal_generator import analyze_with_ai, clean_json_response, analyze_signal_gemeni
+from utils.transformEvents import transform_economic_events
 import concurrent.futures
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from db import EconomicCalendarDB, SignalDB, JSONEncoder
 from datetime import datetime
@@ -15,6 +17,58 @@ from bson.json_util import dumps
 app = FastAPI()
 calendar_db = EconomicCalendarDB()
 signals_db = SignalDB()
+
+#define cors
+origins = [
+    "http://localhost:5173",  # React app running locally
+    "https://your-production-url.com",  # Replace with your production URL
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Economic Calendar API"}
+
+@app.get("/events")
+async def get_events(
+    start_date: Optional[str] = Query(None, description="Filter by start date (YYYY-MM-DD format)"),
+    end_date: Optional[str] = Query(None, description="Filter by end date (YYYY-MM-DD format)"),
+    countries: Optional[List[str]] = Query(None, description="Filter by country"),
+    impact: Optional[List[str]] = Query(None, description="Filter by impact"),
+    sources: Optional[List[str]] = Query(None, description="Filter by source"),
+):
+    try:
+        print(f"Filtering with: start_date={start_date}, end_date={end_date}, countries={countries}, impact={impact}, sources={sources}")
+        events = calendar_db.get_events(
+            start_date=start_date,
+            end_date=end_date,
+            countries=countries,
+            impact=impact,
+            sources=sources
+        )
+        # Convert MongoDB objects to JSON using your custom encoder
+        serialized_events = JSONEncoder().encode(events)
+        # Parse back to Python objects before returning
+        events_data = json.loads(serialized_events)
+        # Transform to desired format
+        return transform_economic_events(events_data)
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": "Failed to retrieve events",
+            "error_type": type(e).__name__,
+            "details": str(e)
+        }
+
+
 
 @app.get("/scrape/cashbackforex")
 async def scrape():
@@ -28,13 +82,13 @@ async def scrape():
             with open('events.json', 'w') as f:
                 json.dump(events, f, indent=4)
 
-            todays_data = get_today_data(events)
-            with open('todays_data.json', 'w') as f:
-                json.dump(todays_data, f, indent=4)
-            result = calendar_db.save_events(todays_data)
+            # todays_data = get_today_data(events)
+            # with open('todays_data.json', 'w') as f:
+            #     json.dump(todays_data, f, indent=4)
+            result = calendar_db.save_events(events)
             return {
                 "status": "success", 
-                "data": todays_data, 
+                "data": events, 
                 "db_result": result
             }
     except Exception as e:
@@ -79,9 +133,10 @@ async def generate_signals():
     try:
         # Fetch economic events from the database
         economic_events = calendar_db.get_events()
+        todays_data = get_today_data(economic_events)
 
         # print(economic_events)
-        serialized_events = JSONEncoder().encode(economic_events)
+        serialized_events = JSONEncoder().encode(todays_data)
         events = json.loads(serialized_events)
 
         

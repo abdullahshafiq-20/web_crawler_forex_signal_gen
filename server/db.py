@@ -162,7 +162,7 @@ class EconomicCalendarDB:
                   countries: Optional[List[str]] = None,
                   impact: Optional[List[str]] = None,
                   sources: Optional[List[str]] = None,
-                  limit: int = 100) -> List[Dict[str, Any]]:
+                  ) -> List[Dict[str, Any]]:
         """
         Query events with various filters.
         
@@ -204,7 +204,7 @@ class EconomicCalendarDB:
         cursor = self.events.find(
             query,
             {"sourceData": 0}  # Exclude the sourceData field to reduce response size
-        ).sort([("date", pymongo.ASCENDING), ("time", pymongo.ASCENDING)]).limit(limit)
+        ).sort([("date", pymongo.ASCENDING), ("time", pymongo.ASCENDING)])
         
         return list(cursor)
     

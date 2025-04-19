@@ -280,10 +280,10 @@ export function ScrapedDataPage() {
 
       {/* Filter panel */}
       <Card className="border-border/30 mb-6">
-        <CardHeader className="bg-card px-6 py-4 border-b border-border/30">
+        <CardHeader className="bg-card px-6 py-4 border-b border-border/30 text-black">
           <div className="flex justify-between items-center">
             <CardTitle>Filter Events</CardTitle>
-            <Button variant="ghost" size="sm" onClick={resetFilters}>
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="border-2 border-border/30 ">
               Reset Filters
             </Button>
           </div>
@@ -404,7 +404,7 @@ export function ScrapedDataPage() {
           </Card>
         ) : (
           <Card className="border-border/30 shadow-card overflow-hidden">
-            <CardHeader className="bg-card px-6 py-4 border-b border-border/30">
+            <CardHeader className="bg-card px-6 py-4 border-b border-border/30 text-black">
               <CardTitle>Forex Economic Events ({events.length})</CardTitle>
             </CardHeader>
             <div className="overflow-x-auto">

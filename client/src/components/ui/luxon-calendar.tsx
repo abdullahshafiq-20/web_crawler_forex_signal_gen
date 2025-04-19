@@ -13,6 +13,7 @@ export type CalendarProps = {
 }
 
 export function Calendar({
+  // Removed unused mode property
   onSelect,
   disabled,
   className,

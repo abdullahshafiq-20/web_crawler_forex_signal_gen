@@ -21,7 +21,7 @@ signals_db = SignalDB()
 #define cors
 origins = [
     "http://localhost:5173",  # React app running locally
-    "https://your-production-url.com",  # Replace with your production URL
+    "https://web-crawler-forex-signal-gen.vercel.app",  # Replace with your production URL
 ]
 
 app.add_middleware(

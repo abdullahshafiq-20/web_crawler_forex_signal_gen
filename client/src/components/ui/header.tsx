@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "./button"
-import { LineChart, RefreshCcw, Settings, Bell, Database, Calendar, CheckCircle, XCircle } from "lucide-react"
+import { LineChart, RefreshCcw, Database, Calendar, CheckCircle, XCircle } from "lucide-react"
 import { NavLink } from "react-router-dom"
 import axios from "axios"
 import { useState, useEffect } from "react"

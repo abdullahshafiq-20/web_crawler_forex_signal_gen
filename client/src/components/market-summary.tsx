@@ -1,9 +1,7 @@
-import React from "react"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Globe, TrendingUp, ExternalLink } from "lucide-react"
 import {
   ChartContainer,
-  ChartTooltip,
   ChartTooltipContent,
 } from "./ui/chart"
 import {
@@ -12,7 +10,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   AreaChart,
 } from "recharts"
 

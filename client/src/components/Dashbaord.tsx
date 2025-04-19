@@ -7,7 +7,6 @@ import { formatDate } from "@/lib/utils"
 import { ArrowUpRight, ArrowDownRight, Minus, RefreshCw, SearchIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Header } from "@/components/ui/header"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -37,7 +36,6 @@ interface Signal {
 }
 
 export function ForexDashboard({ data }: { data?: ForexData }) {
-    const api = import.meta.env.VITE_API_URL
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 

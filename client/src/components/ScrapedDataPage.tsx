@@ -7,7 +7,7 @@ import { RefreshCw, Calendar, Clock, Globe, Flag, TrendingUp, Filter } from "luc
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
+import { DateTime } from "luxon"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 
 interface ScrapedEvent {
@@ -186,7 +186,8 @@ export function ScrapedDataPage() {
     const newFilters = { ...filters }
     
     if (date) {
-      newFilters.start_date = format(date, "yyyy-MM-dd")
+      // Format date using Luxon
+      newFilters.start_date = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd")
     } else {
       delete newFilters.start_date
     }
@@ -200,7 +201,8 @@ export function ScrapedDataPage() {
     const newFilters = { ...filters }
     
     if (date) {
-      newFilters.end_date = format(date, "yyyy-MM-dd")
+      // Format date using Luxon
+      newFilters.end_date = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd")
     } else {
       delete newFilters.end_date
     }
@@ -227,6 +229,11 @@ export function ScrapedDataPage() {
       default:
         return "bg-muted text-muted-foreground"
     }
+  }
+
+  // Format date for display using Luxon
+  const formatDate = (date: Date) => {
+    return DateTime.fromJSDate(date).toFormat("MMMM d, yyyy")
   }
 
   return (
@@ -295,7 +302,7 @@ export function ScrapedDataPage() {
                   }`}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP") : "Pick a date"}
+                  {startDate ? formatDate(startDate) : "Pick a date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -320,7 +327,7 @@ export function ScrapedDataPage() {
                   }`}
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP") : "Pick a date"}
+                  {endDate ? formatDate(endDate) : "Pick a date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">

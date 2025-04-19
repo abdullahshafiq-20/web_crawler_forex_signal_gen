@@ -9,7 +9,7 @@ import { SignalCard } from "@/components/signal-card"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { format, parseISO, startOfWeek, addDays, isSameDay } from "date-fns"
+import { DateTime } from "luxon"
 import { ArrowUpRight, ArrowDownRight, Minus, Calendar as CalendarIcon, Loader2 } from "lucide-react"
 
 interface Signal {
@@ -55,7 +55,7 @@ interface GenerateResponse {
 
 export function WeeklySignalsPage() {
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    DateTime.now().toFormat("yyyy-MM-dd")
   );
   const [weekDates, setWeekDates] = useState<string[]>([]);
   const [signalsData, setSignalsData] = useState<SignalData | null>(null);
@@ -67,7 +67,7 @@ export function WeeklySignalsPage() {
   
   // Initialize the week dates
   useEffect(() => {
-    generateWeekDates(new Date());
+    generateWeekDates(DateTime.now());
   }, []);
   
   // Fetch signals for selected date
@@ -78,13 +78,14 @@ export function WeeklySignalsPage() {
   }, [selectedDate]);
   
   // Generate array of dates for the week containing the given date
-  const generateWeekDates = (date: Date) => {
-    const start = startOfWeek(date, { weekStartsOn: 1 }); // Start from Monday
+  const generateWeekDates = (date: DateTime) => {
+    // Get Monday of the current week (1 is Monday in Luxon)
+    const start = date.startOf('week');
     const dates: string[] = [];
     
     for (let i = 0; i < 7; i++) {
-      const day = addDays(start, i);
-      dates.push(format(day, 'yyyy-MM-dd'));
+      const day = start.plus({ days: i });
+      dates.push(day.toFormat('yyyy-MM-dd'));
     }
     
     setWeekDates(dates);
@@ -152,9 +153,9 @@ export function WeeklySignalsPage() {
   // Handle date change from the calendar
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      const dateString = format(date, 'yyyy-MM-dd');
+      const dateString = DateTime.fromJSDate(date).toFormat('yyyy-MM-dd');
       setSelectedDate(dateString);
-      generateWeekDates(date);
+      generateWeekDates(DateTime.fromJSDate(date));
     }
   };
   
@@ -216,13 +217,13 @@ export function WeeklySignalsPage() {
                 className="w-full sm:w-auto justify-start text-left font-normal"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(parseISO(selectedDate), 'MMMM d, yyyy') : "Select date"}
+                {selectedDate ? DateTime.fromISO(selectedDate).toFormat('MMMM d, yyyy') : "Select date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <Calendar
                 mode="single"
-                selected={selectedDate ? parseISO(selectedDate) : undefined}
+                selected={selectedDate ? new Date(selectedDate) : undefined}
                 onSelect={handleDateChange}
               />
             </PopoverContent>
@@ -257,8 +258,8 @@ export function WeeklySignalsPage() {
               )}
             >
               <div className="flex flex-col items-center">
-                <span>{format(parseISO(date), 'EEE')}</span>
-                <span className="font-bold">{format(parseISO(date), 'd')}</span>
+                <span>{DateTime.fromISO(date).toFormat('ccc')}</span>
+                <span className="font-bold">{DateTime.fromISO(date).toFormat('d')}</span>
               </div>
             </Button>
           ))}
@@ -325,7 +326,7 @@ export function WeeklySignalsPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Forex Signals</CardTitle>
                 <div className="text-sm text-muted-foreground">
-                  {format(parseISO(signalsData.date), 'MMMM d, yyyy')}
+                  {DateTime.fromISO(signalsData.date).toFormat('MMMM d, yyyy')}
                 </div>
               </div>
             </CardHeader>

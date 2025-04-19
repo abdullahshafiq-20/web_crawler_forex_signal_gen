@@ -8,3 +8,7 @@ __pycache__
 *.log
 *.env
 *.DS_Store
+data.json
+events.json
+*.png
+todays_data.json

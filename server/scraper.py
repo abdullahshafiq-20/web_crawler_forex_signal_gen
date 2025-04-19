@@ -63,10 +63,10 @@ def scrape_cashback_forex(url="https://www.cashbackforex.com/widgets/economic-ca
         content = parser_cashback_forex(content)
         return content
     except Exception as e:
-        driver.save_screenshot("error_screenshot.png")
         return f"Error: {str(e)}"
     finally:
-        driver.quit()
+        if driver:
+            driver.quit()
 
 def parser_cashback_forex(content, filename="data.json"):
     soup = BeautifulSoup(content, "html.parser")
@@ -210,7 +210,7 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
             # Extract the calendar table
             calendar_table = driver.find_element(By.CSS_SELECTOR, ".calendar__table")
             calendar_html = calendar_table.get_attribute("outerHTML")
-            print("Calendar table HTML extracted")
+            # print("Calendar table HTML extracted")
             
                 
             return forex_factory_parser(calendar_html)
@@ -251,7 +251,8 @@ def forex_factory_scraper(url="https://www.forexfactory.com/calendar"):
         return json.dumps([], indent=4)
         
     finally:
-        driver.quit()
+        if driver:
+            driver.quit()
 
 def forex_factory_parser(content, filename="data_forex.json"):
     # Don't wrap the content in a table - it's already a table

@@ -86,4 +86,4 @@ Product-based project with research elements in AI-driven signal generation and 
 - Frontend (React)  
 - Networking flows (REST, concurrent scraping, CORS)
 
-![logo](https://res.cloudinary.com/dkb1rdtmv/image/upload/v1745091677/mermaid-diagram-2025-04-20-004105_e48kua.svg)
+![logo](https://res.cloudinary.com/dkb1rdtmv/image/upload/v1745092521/mermaid-diagram-2025-04-20-005507_wa543w.png)

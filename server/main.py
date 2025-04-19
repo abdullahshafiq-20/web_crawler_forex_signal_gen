@@ -79,8 +79,8 @@ async def scrape():
             
             events = json.loads(data)
             # Filter today's data
-            with open('events.json', 'w') as f:
-                json.dump(events, f, indent=4)
+            # with open('events.json', 'w') as f:
+            #     json.dump(events, f, indent=4)
 
             # todays_data = get_today_data(events)
             # with open('todays_data.json', 'w') as f:
@@ -107,9 +107,9 @@ async def scrape():
                 executor, lambda: forex_factory_scraper())
             
             events = json.loads(data)
-            # Filter today's data
-            with open('events.json', 'w') as f:
-                json.dump(events, f, indent=4)
+            # # Filter today's data
+            # with open('events.json', 'w') as f:
+            #     json.dump(events, f, indent=4)
             # Filter today's data
             todays_data = get_today_data(events)
             print("Tidays Data", todays_data)

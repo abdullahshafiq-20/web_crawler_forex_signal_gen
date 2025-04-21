@@ -356,7 +356,7 @@ class SignalDB:
         cursor = self.signals.find(
             query,
             {"signalId": 0}  # Exclude the signalId field to reduce response size
-        ).sort([("date", pymongo.ASCENDING), ("pair", pymongo.ASCENDING)]).limit(limit)
+        ).sort([("date", pymongo.DESCENDING), ("pair", pymongo.ASCENDING)]).limit(limit)
         
         return list(cursor)
     

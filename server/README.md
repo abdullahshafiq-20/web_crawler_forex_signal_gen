@@ -5,13 +5,23 @@
 
 ## Overview
 
+The core idea behind this project is to create an automated, scalable platform for extracting, aggregating, and analyzing global economic event data from multiple online sources, with a focus on delivering actionable insights for financial trading—especially in the crypto market. The system leverages advanced web scraping, robust networking, and AI-driven analysis to provide real-time, high-quality data and trading signals to traders and analysts.
+
 ### 2.1 Significance of the Project
-This project addresses the challenge of collecting and synchronizing economic event data from multiple online sources, which is often scattered and inconsistently formatted. By leveraging robust networking and scraping technologies (notably Selenium for dynamic content), the system ensures reliable, up-to-date data for financial analysis and trading signal generation. The project’s significance lies in its automation, scalability, and potential to improve trading outcomes.
+
+Access to timely and accurate economic event data is crucial for making informed trading decisions, particularly in the fast-moving crypto market. However, such data is often scattered across various sources, inconsistently formatted, and difficult to aggregate manually. This project addresses these challenges by automating the collection and synchronization of economic event data, ensuring reliability and up-to-date information. The work is significant due to its:
+- Practicality: Automates a time-consuming and error-prone process for traders and analysts.
+- Usefulness: Provides a unified, clean, and accessible dataset for financial analysis and trading strategies.
+- Academic Value: Demonstrates the application of advanced scraping, data engineering, and AI in a real-world financial context.
+- Impact: If successful, the platform can improve trading outcomes, reduce manual effort, and serve as a foundation for further research in financial data analysis and AI-driven trading.
 
 ### 2.2 Description of the Project
-The core idea is to build a distributed web scraping and data analysis platform. The backend (Python, FastAPI) uses Selenium and BeautifulSoup to scrape economic calendars from sites like CashbackForex and ForexFactory, handling dynamic content and anti-bot measures. Scraped data is processed, stored in MongoDB, and made available via REST APIs. The frontend (React) visualizes this data. Networking is central: the system uses concurrent scraping, asynchronous APIs, and secure environment-based API key management to ensure efficient, scalable, and secure data flow.
+
+This project aims to solve the problem of fragmented and inconsistent economic event data by building a distributed web scraping and data analysis platform. The backend, built with Python and FastAPI, uses Selenium and BeautifulSoup to scrape economic calendars from sources like CashbackForex and ForexFactory, handling dynamic content and anti-bot measures. The scraped data is cleaned, deduplicated, normalized, and stored in MongoDB. REST APIs provide access to this data for both internal analysis and external clients. The frontend, built with React, visualizes the data and trading signals for end users. The system is designed to be modular, scalable, and secure, with features such as concurrent scraping, asynchronous APIs, and environment-based API key management. The scope of the work is generalized for financial markets but is particularly tailored for the crypto market, where real-time data and rapid response are critical.
 
 ### 2.3 Background of the Project
+
+The project builds on a range of established tools and techniques:
 - Selenium for dynamic web scraping ([Selenium Docs](https://www.selenium.dev/documentation/))
 - Selenium Stealth and WebDriver Manager for anti-bot evasion and driver management
 - FastAPI for high-performance backend APIs ([FastAPI Docs](https://fastapi.tiangolo.com/))
@@ -19,9 +29,13 @@ The core idea is to build a distributed web scraping and data analysis platform.
 - BeautifulSoup for HTML parsing ([BeautifulSoup Docs](https://www.crummy.com/software/BeautifulSoup/))
 - Related works: [Investing.com Economic Calendar](https://www.investing.com/economic-calendar/), [Forex Factory](https://www.forexfactory.com/calendar)
 - Networking protocols: REST, CORS, concurrent futures for parallel scraping
+- AI APIs: OpenRouter and Gemini for automated trading signal analysis
+
+These resources provide the technical foundation for the project, while the integration of AI for signal generation represents a novel contribution.
 
 ### 2.4 Project Category
-Product-based project with research elements in AI-driven signal generation and advanced scraping.
+
+This project is a **Product-based** solution with research elements, specifically targeting the crypto market. It is designed to be a deployable platform that can be used by traders, analysts, and financial institutions to gain a competitive edge through automated data aggregation and AI-driven trading signals.
 
 ## Features / Scope / Modules
 
@@ -75,8 +89,6 @@ Product-based project with research elements in AI-driven signal generation and 
 
 ## Diagrammatic Representation of the Overall System
 
-
-
 *(Attach a system architecture diagram showing:)*  
 - Data sources (websites/APIs)  
 - Selenium-based scraper modules  
@@ -87,3 +99,26 @@ Product-based project with research elements in AI-driven signal generation and 
 - Networking flows (REST, concurrent scraping, CORS)
 
 ![logo](https://res.cloudinary.com/dkb1rdtmv/image/upload/v1745092521/mermaid-diagram-2025-04-20-005507_wa543w.png)
+
+## API Endpoints
+
+- **GET /**  
+  Returns a welcome message to confirm the API is running.
+
+- **GET /events**  
+  Retrieves economic events from the database. Supports optional filters: start_date, end_date, countries, impact, and sources.
+
+- **GET /scrape/cashbackforex**  
+  Scrapes economic events from CashbackForex, saves them to the database, and returns the data.
+
+- **GET /scrape/forexfactory**  
+  Scrapes economic events from ForexFactory, saves today's data to the database, and returns the data.
+
+- **GET /generate-signals**  
+  Generates trading signals using AI based on today's economic events and saves them to the database.
+
+- **GET /signals**  
+  Retrieves generated trading signals. Optionally filter by date.
+
+- **GET /scrape/all**  
+  Runs both CashbackForex and ForexFactory scrapers in parallel, saves today's events from both sources, and returns a summary.

@@ -1,5 +1,25 @@
 # Web Crawler & Economic Event Signal Generator
 
+A full-stack platform for scraping, aggregating, and analyzing global economic event data in real time. The backend (Python, FastAPI, Selenium) scrapes and processes economic calendars, while the frontend (React, Vite, Tailwind) visualizes data and AI-generated trading signals. Features robust networking, concurrent scraping, and secure, scalable architecture for financial analytics and automation.
+
+**Topics:**
+- web-scraping
+- selenium
+- fastapi
+- mongodb
+- react
+- vite
+- tailwindcss
+- ai-signals
+- financial-data
+- economic-calendar
+- automation
+- networking
+- python
+- typescript
+
+---
+
 ![Main image](https://res.cloudinary.com/dkb1rdtmv/image/upload/v1745091536/Screenshot_2025-04-20_002008_gvhsdn.png)
 ---
 

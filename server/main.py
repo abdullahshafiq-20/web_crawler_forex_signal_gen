@@ -222,7 +222,7 @@ async def get_signals(date: Optional[str] = Query(None, description="Filter by d
         if date:
             signals = signals_db.get_signals(start_date=date, end_date=date)
         else:
-            signals = signals_db.get_today_signals()
+            signals = signals_db.get_signals()
             
         # Convert MongoDB objects for JSON response using JSON encoder
         serialized_signals = JSONEncoder().encode(signals)

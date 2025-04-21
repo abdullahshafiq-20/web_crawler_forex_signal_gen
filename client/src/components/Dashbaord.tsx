@@ -23,7 +23,8 @@ interface ForexData {
     signals: Signal[]
     date: string
     timestamp: string
-  }
+  },
+  oldData?: boolean
 }
 
 interface Signal {
@@ -38,6 +39,8 @@ interface Signal {
 export function ForexDashboard({ data }: { data?: ForexData }) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+
+
 
   // Add a null check for data
   if (!data || !data.signals) {
@@ -120,7 +123,7 @@ export function ForexDashboard({ data }: { data?: ForexData }) {
               <p className="text-xs sm:text-sm">Date: {data.signals.date || "N/A"}</p>
             </div>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2 sm:gap-3">
             <div className="relative flex-grow sm:flex-grow-0 sm:min-w-[200px]">
               <input 
@@ -140,7 +143,43 @@ export function ForexDashboard({ data }: { data?: ForexData }) {
               Refresh
             </Button>
           </div>
+          
         </div>
+        {/* Warning for old data */}
+        {data.oldData && (
+          <div className="mb-6 p-3 border border-warning/30 bg-warning/10 rounded-md flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor"
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="h-5 w-5 text-warning"
+              >
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-warning">This is old data from {data.signals.date}</p>
+                <p className="text-xs text-muted-foreground">Please scrape fresh data for today's latest signals</p>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-warning/30 text-warning hover:bg-warning/10 hover:text-warning"
+              onClick={() => window.location.href = '/scraped-data'}
+            >
+              Update Data
+            </Button>
+          </div>
+        )}
+          
+
 
         <MarketSummary summary={data.signals.market_summary} />
 

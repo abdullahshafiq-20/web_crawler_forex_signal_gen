@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { Header } from "@/components/ui/header"
 import axios from "axios"
+import { DateTime } from "luxon"
 
 // Interfaces remain the same
 interface Signal {
@@ -33,6 +34,7 @@ interface ForexData {
     date: string;
     timestamp: string;
   };
+  oldData?: boolean;
 }
 
 export default function App() {
@@ -40,6 +42,7 @@ export default function App() {
   const [forexData, setForexData] = useState<ForexData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [oldData, setOldData] = useState(false)
 
   const fetchForexData = async () => {
     try {
@@ -50,6 +53,13 @@ export default function App() {
       // Transform API response to match expected ForexData structure
       if (response.data && response.data.signals && response.data.signals.length > 0) {
         const signalData = response.data.signals[0];
+        
+        // Determine if data is old directly, without using state
+        const isDataOld = signalData.date !== DateTime.now().toFormat("yyyy-MM-dd");
+        
+        if (isDataOld) {
+          console.error("The data is old, got scrape section and scrape new data to generate the new signals")
+        }
         
         const transformedData: ForexData = {
           status: response.data.status || "",
@@ -64,11 +74,13 @@ export default function App() {
             signals: signalData.signals || [],
             date: signalData.date || "",
             timestamp: signalData.timestamp || ""
-          }
+          },
+          oldData: isDataOld // Set directly using local variable instead of state
         };
         
         console.log("Transformed data:", transformedData);
         setForexData(transformedData);
+        setOldData(isDataOld); // Update state for other components if needed
         setError(null);
       } else {
         console.error("Invalid or empty response data:", response.data);
